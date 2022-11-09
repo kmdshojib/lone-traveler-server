@@ -31,6 +31,12 @@ const runMongo = async () =>{
             const service = await serviceCollection.findOne(query);
             res.send(service);
         })
+        app.get("/reviews",async (req,res)=>{
+            const query = {};
+            const cursor = reviewCollection.find(query)
+            const review = await cursor.toArray();
+            res.send(review)
+        })
         // post request
         app.post("/addservice",async(req, res)=>{
             const service = req.body

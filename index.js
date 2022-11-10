@@ -66,15 +66,18 @@ const runMongo = async () =>{
         // updating the review section
         app.patch("/reviews/:id", async(req, res)=>{
             const id = req.params.id
-            const status = req.params.status
+            const review = req.params.status
+            console.log(review)
+            // this option instructs the method to create a document if no documents match the filter
+            const options = { upsert: true };
+        
             const query = {_id: ObjectId(id)} 
+            const udatedReview = req.body
             const updateDocument = {
-                $set:{
-                    status:status,
-                }
+                $set:udatedReview
             }
-            const result = await reviewCollection.updateOne(query, updateDocument)
-            console.log(result)
+            const result = await reviewCollection.updateOne(query, updateDocument,options)
+            console.log(udatedReview,result)
             res.send(result)
         })
     }

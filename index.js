@@ -1,19 +1,49 @@
 const express = require('express');
 const cors = require('cors');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const jwt = require("jsonwebtoken")
+
 require('dotenv').config()
 
 const app = express();
 app.use(cors())
 app.use(express.json());
 
+// Mongo DB UrI and client
+
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.ygyoxnw.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
+
+// Verify jwt
+const  verifyJWT = (req,res,next) =>{
+    const authHeader = req.headers.authorization
+    if(!authHeader){
+        res.send({Message: " Unauthorized access token!"})
+    }
+    const token = authHeader.split(' ')[1]
+    jwt.verify(token, process.env.ACCESS_TOKEN, (error,decoded)=>{
+        error && res.status(401).send({Message: " Unauthorized access token!"}) 
+        req.decoded = decoded
+        next()
+    })
+
+}
+
+// Mongo DB poerations 
 
 const runMongo = async () =>{
     try{
         const serviceCollection =  client.db("reviewdb").collection("service")
         const reviewCollection =  client.db("reviewdb").collection("review")
+
+        // Jwt operation
+
+        app.post("/jwt",(req, res)=>{
+            const user = req.body
+            const token = jwt.sign(user,process.env.ACCESS_TOKEN,)
+            res.send({token})
+        })
+
         // get requests
         app.get("/service",async (req, res)=>{
             const cursor = serviceCollection.find({}).limit(3)
@@ -31,7 +61,12 @@ const runMongo = async () =>{
             const service = await serviceCollection.findOne(query);
             res.send(service);
         })
-        app.get("/reviews",async (req,res)=>{
+        app.get("/reviews",verifyJWT, async (req,res)=>{
+           const decoded = req.decoded
+           console.log(decoded)
+           if(decoded.email !== req.query.email){
+                res.status(403).send({Message: " Unauthorized access token!"})
+           }
             let query = {};
             if(req.query.email){
                 query = {
@@ -40,6 +75,12 @@ const runMongo = async () =>{
             }
             const cursor = reviewCollection.find(query)
             const review = await cursor.toArray();
+            res.send(review)
+        })
+        app.get("/allreviews", async (req, res)=>{
+            const cursor = reviewCollection.find({}).sort({_id: -1})
+            const review = await cursor.toArray()
+            console.log(review)
             res.send(review)
         })
         // post request

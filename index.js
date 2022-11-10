@@ -32,7 +32,12 @@ const runMongo = async () =>{
             res.send(service);
         })
         app.get("/reviews",async (req,res)=>{
-            const query = {};
+            let query = {};
+            if(req.query.email){
+                query = {
+                    email: req.query.email
+                }
+            }
             const cursor = reviewCollection.find(query)
             const review = await cursor.toArray();
             res.send(review)
@@ -46,6 +51,30 @@ const runMongo = async () =>{
         app.post("/addReview",async(req, res)=>{
             const review = req.body
             const result = await reviewCollection.insertOne(review)
+            res.send(result)
+        })
+
+        // delete the review
+        app.delete("/reviews/:id", async(req, res)=>{
+            const id = req.params.id
+            const query = {_id: ObjectId(id)} 
+            const result = await reviewCollection.deleteOne(query)
+            console.log(result)
+            res.send(result)
+        })
+
+        // updating the review section
+        app.patch("/reviews/:id", async(req, res)=>{
+            const id = req.params.id
+            const status = req.params.status
+            const query = {_id: ObjectId(id)} 
+            const updateDocument = {
+                $set:{
+                    status:status,
+                }
+            }
+            const result = await reviewCollection.updateOne(query, updateDocument)
+            console.log(result)
             res.send(result)
         })
     }

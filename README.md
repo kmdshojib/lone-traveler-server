@@ -1,7 +1,7 @@
 
-# Lone Traveller-Server
+# Lone Traveler-Server
 
-This is a clinet site for an travel guide website called lone traveller.
+This is a Server site for an travel guide website called lone traveler.
 
 # Functions
 
